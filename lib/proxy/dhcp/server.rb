@@ -73,11 +73,17 @@ module Proxy::DHCP
 
     def find_subnet value
       subnets.each do |s|
-        return s if value.is_a?(String) and s.network == value
-        return s if value.is_a?(Proxy::DHCP::Record) and s.include?(value.ip)
-        return s if value.is_a?(IPAddr) and s.include?(value)
+        if ((value.is_a?(String) and s.network == value                )or
+            (value.is_a?(Proxy::DHCP::Record) and s.include?(value.ip) )or
+            (value.is_a?(IPAddr) and s.include?(value))                )
+          if SETTINGS.dhcp_cache_enabled and SETTINGS.dhcp_cache_ttl and s.loaded? and (Time.now - s.timestamp) > SETTINGS.dhcp_cache_ttl
+            logger.debug "Flushing cached subnet"
+            s.load
+          end
+          return s
+        end
       end
-      return nil
+      nil
     end
 
     def find_record record
