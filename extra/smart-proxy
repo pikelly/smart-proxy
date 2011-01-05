@@ -1,0 +1,70 @@
+#! /bin/sh
+### BEGIN INIT INFO
+# Provides:		smart-proxy
+# Required-Start:	$remote_fs $syslog
+# Required-Stop:	$remote_fs $syslog
+# Should-Start:		$local_fs
+# Should-Stop:		$local_fs
+# Default-Start:	2 3 4 5
+# Default-Stop:		0 1 6
+# Short-Description:	Start smart-proxy daemon
+# Description:		Start up smart-proxy, a remote satellite service for the Foreman system
+### END INIT INFO
+
+
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+DAEMON=/usr/bin/smart-proxy
+NAME=smart-proxy
+DESC="Foreman's smart proxy"
+PIDFILE=/var/run/$NAME/$NAME.pid
+
+test -x $DAEMON || exit 0
+
+set -e
+
+. /lib/lsb/init-functions
+
+# Edit /etc/default/smart-proxy to change this.
+ENABLE_SMART_PROXY=no
+test -r /etc/default/smart-proxy && . /etc/default/smart-proxy
+
+case "$1" in
+  start)
+	echo -n "Starting $DESC: "
+  if [ $ENABLE_SMART_PROXY = yes ]; then
+	$DAEMON start
+	echo "$NAME."
+	else
+		echo "$NAME disabled in /etc/default/smart-proxy."
+	fi
+	;;
+  stop)
+	echo -n "Stopping $DESC: "
+	$DAEMON stop
+	echo "$NAME."
+	rm -f $PIDFILE
+	;;
+
+  restart|force-reload)
+	#
+	#	If the "reload" option is implemented, move the "force-reload"
+	#	option to the "reload" entry above. If not, "force-reload" is
+	#	just the same as "restart".
+	#
+	echo -n "Restarting $DESC: "
+	$DAEMON stop
+	sleep 1
+	$DAEMON start
+	echo "$NAME."
+	;;
+  status)
+	$DAEMON status
+	;;
+  *)
+	N=/etc/init.d/$NAME
+	echo "Usage: $N {start|stop|restart|force-reload|status}" >&2
+	exit 1
+	;;
+esac
+
+exit 0

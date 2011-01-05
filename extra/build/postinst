@@ -1,0 +1,20 @@
+#!/bin/sh
+
+set -e
+
+if ! getent passwd smart-proxy > /dev/null ; then
+  adduser --quiet --system --disabled-password \
+    --home /nonexistent --no-create-home \
+    --shell /bin/false --group smart-proxy
+fi
+
+chown -R smart-proxy:smart-proxy /usr/lib/smart-proxy
+
+update-rc.d smart-proxy defaults
+
+if ! [ -f "/var/run/smart-proxy" ]
+then
+  mkdir /var/run/smart-proxy /var/log/smart-proxy
+  chown smart-proxy:smart-proxy /var/run/smart-proxy /var/log/smart-proxy
+fi
+invoke-rc.d smart-proxy start || true
