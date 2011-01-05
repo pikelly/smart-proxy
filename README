@@ -125,5 +125,7 @@ Configure the proxy
 
 Test the installation
   run "extra/query.rb --help" for more details
+  To use the POST options observe this example
+    ./extra/query.rb --verb post -v --json https://brstest.brs.someware.com:4567/tftp/fetch_boot_file "{:prefix => 'test', :path => 'http://centos.psw.net/centos/5.5/os/i386/images/pxeboot/vmlinuz'}"
 
 Copyright (c) 2010 ohadlevy@gmail.com & paul.ian.kelly@googlemail.com, released under the GPL3+ license
