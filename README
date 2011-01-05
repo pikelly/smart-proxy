@@ -1,13 +1,129 @@
 Proxy
 =====
 
-Introduction goes here.
+Native Microsoft Installation
+=============================
+*********************************************************************
+****** Do not use a path with spaces in it to store ruby code. ******
+*********************************************************************
 
+Application architecture
+========================
+ +-----+
+ |netsh|       Native DHCP configuration tool
+ +-----+
+    ^
+    |
+    v
++-------+
+|sinatra|     proxy logic
++-------+
+  rack        request,response
++-------+
+|webrick|     web server(port 4567)
++-------+
+   ^
+ https
+   |
+   v
+  web
 
-Example
-=======
+Component installation
+======================
+Login as a user with permissions to run the native Microsoft netsh tool and grant that user "log on as a service" rights.
+(This is automatically granted to the user if the smart-proxy service is edited by the Microsoft services gui.)
 
-Example goes here.
+Download the smart proxy. If you wish to store the logs within this area then ensure that there is 10MB of storage available
+  git clone git://github.com/pikelly/smart-proxy.git smart-proxy
+  OR
+  http://theforeman.org/???
+  and unpack the file
 
+Install ruby1.8.6+
+  Download from http://rubyforge.org/frs/download.php/72085/rubyinstaller-1.8.7-p302.exe
+  Accept the path and association changes
+  I suggest c:\ruby187
 
-Copyright (c) 2010 ohadlevy@gmail.com, released under the GPL3+ license
+Download and install the supporting gems
+  From a cmd prompt
+    gem install haml json --platform x86-mswin32-60 [-p http://proxy:port]
+    gem install highline --platform x86-mswin32-60
+    gem install rack --version 1.2.0 --platform x86-mswin32-60
+    gem install sinatra --platform x86-mswin32-60
+    gem install win32-api win32-open3 win32-service --platform x86-mswin32-60
+    gem install net-ping --platform x86-mswin32-60  --platform mswin32
+    gem install rest-client --platform x86-mswin32-60
+
+Create a logging directory if it does not exist
+  md log
+
+Configure SSL certificates
+  This installation provides control over a Microsoft DHCP server so must be properly secured. Foreman will validate the logged in user
+  and originate a request to the proxy. This request will only be accepted if the SSL certificates match. Therefore the client's
+  private key grants access to proxy's funtionality, so protect it.
+
+  As this tool is meant to interoperate with a puppet installation I suggest that you use the Certificate Authority provided by a puppet server as your CA.
+
+  1) Login to your puppetmaster, which has a Certificate Authority
+
+  2) Use the puppet tools to create a new certificate
+    puppetca --generate <proxy-FQDN>
+
+  3) Copy the certificate keys to your Windows host
+    scp puppetmaster:/var/lib/puppet/ssl/ca/signed/<proxy-FQDN>.pem signed.pem
+    scp puppetmaster:/var/lib/puppet/ssl/private_keys/<proxy-FQDN>.pem private.pem
+
+  4) Copy the ssl/certs/ca.pem from any puppet client to the smart-proxy\config directory. This ensures that the proxy trusts the same CA as a puppet client.
+
+  7) Append the ssl/certs/<hostname>.pem from your foreman host onto the end of the smart-proxy\ca.pem file.
+
+Configure the proxy
+  Edit config\settings to ensure that you are only running the native_ms component in the proxy. Ensure that the certificate and log locations are correctly
+  defined for a windows machine.
+
+Install the proxy as a Windows service
+  Run ruby extra\install_service.rb
+  If there are errors then check log\service.log. Service initialisation failure messages always go there.
+
+Test the installation
+  run "ruby extra\query.rb --help" for more details
+
+Unix installation
+=================
+
+Source install
+==============
+Download the smart proxy. If you wish to store the logs within this area then ensure that there is 10MB of storage available
+  git clone git://github.com/pikelly/smart-proxy.git smart-proxy
+  OR
+  http://theforeman.org/???
+  and unpack the file
+
+Download and install the supporting gems
+    gem install haml json
+    gem install highline
+    gem install rack sinatra
+    gem install win32-api win32-open3 win32-service
+    gem install net-ping
+    gem install rest-client
+    gem install daemons
+
+Create a startup script for the smart-proxy application.
+
+gem install
+===========
+  http://theforeman.org/.../smart-proxy-0.0.1-x86_64-linux.gem
+  gem install smart-proxy-0.0.1-x86_64-linux.gem
+  /usr/bin/configure-smart-proxy
+
+common actions
+==============
+
+Configure the proxy
+  Edit config/settings to ensure that you are running the required components in the proxy. Ensure that the certificate and log locations are correctly
+  defined for a Unix machine.
+
+Test the installation
+  run "extra/query.rb --help" for more details
+
+Copyright (c) 2010 ohadlevy@gmail.com & paul.ian.kelly@googlemail.com, released under the GPL3+ license

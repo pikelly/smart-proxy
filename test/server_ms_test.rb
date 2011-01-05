@@ -1,31 +1,26 @@
+$: << "../lib"
+$: << "../lib/proxy"
 require 'test/unit'
-require 'dhcp'
-require 'dhcp/server/ms'
+require 'proxy'
+require 'dhcp/server/native_ms'
 
 class DHCPServerMicrosoftTest < Test::Unit::TestCase
 
   def setup
-    username = "domain\\username"
-    password = File.read("lib/.pass").chomp
-    gateway  = "gateway"
-    dhcpSrv  = "server"
-
-    #UGLY workaround for now
-    @server = @@server ||= DHCP::Server::MS.new({:username => username, :password => password,
-                                                :gateway => gateway, :server => dhcpSrv})
+    @server = Proxy::DHCP::Server::NativeMS.new({:server => SETTINGS.dhcp_server})
   end
 
   def find_subnet
-    @subnet = @server.find_subnet "172.20.76.0"
+    @subnet = @server.find_subnet SETTINGS.valid_subnet
   end
 
   def test_it_should_get_subnets_data
     assert @server.subnets.size > 0
   end
 
-    def test_should_load_subnet_records
+  def test_should_load_subnet_records
     find_subnet
-    @server.loadSubnetData @subnet
+    @subnet.load
     assert @subnet.records.size > 0
   end
 
@@ -47,7 +42,7 @@ class DHCPServerMicrosoftTest < Test::Unit::TestCase
 
   def test_records_should_have_options
     find_subnet
-    @server.loadSubnetData @subnet
+    @subnet.load
     record = @subnet.records.first
     @server.loadRecordOptions record
     assert record.options.size > 0
@@ -55,7 +50,7 @@ class DHCPServerMicrosoftTest < Test::Unit::TestCase
 
   def test_records_should_have_options_and_values
     find_subnet
-    @server.loadSubnetData @subnet
+    @subnet.load
     record = @subnet.records.first
     @server.loadRecordOptions record
     error = false
