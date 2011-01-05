@@ -1,0 +1,36 @@
+#!/usr/bin/ruby
+require 'rubygems'        # if you use RubyGems
+require 'daemons'
+require 'pathname'
+
+# This installation is modified by the installation mechanism.
+# Smart-proxy :-
+# can be deployed in-place in a repository or
+# can be deployed as a dpkg or
+# can be deployed as a gem
+
+dpkg_location      = '/usr/lib/smart-proxy/lib/smart-proxy.rb'
+absolute_location  = Pathname.new(__FILE__).dirname.realpath.parent.join("lib", "smart-proxy.rb")
+
+options = { :multiple   => false,  # We only want one instance
+            :ontop      => false,  # Which should daemonize
+            :mode       => :load,  # Start via an exec call
+            :backtrace  => true,   # Capture any pesky error traces
+            :monitor    => true,   # restart me if I die
+            :log_output => true}   # Capture the web server output
+
+if $0 != "/usr/bin/smart-proxy" and $0 != dpkg_location
+  # We put the daemon logs in the checkout's log dir
+  options.merge! :dir_mode => :script, :dir => "../log"
+  location = absolute_location
+elsif Gem.available? "smart-proxy"
+  # We put the daemon logs in /var/log/smart-proxy
+  options.merge! :dir_mode => :normal, :dir => "/var/log/smart-proxy"
+  location = absolute_location
+elsif File.exist? dpkg_location
+  # We put the daemon logs in /var/log/smart-proxy
+  options.merge! :dir_mode => :normal, :dir => "/var/log/smart-proxy"
+  location = absolute_location
+end
+
+Daemons.run(location, options)
