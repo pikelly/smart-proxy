@@ -30,7 +30,7 @@ module Proxy::DHCP
       raise Proxy::DHCP::Error, "Already exists" if find_record(ip)
       raise Proxy::DHCP::Error, "Unknown subnet for #{ip}" unless subnet = find_subnet(IPAddr.new(ip))
 
-      msg = "Added DHCP reservation for #{record.name} => #{record}"
+      msg = "Added DHCP reservation for #{options[:name]}"
       omcmd "connect"
       omcmd "set name = \"#{name}\""
       omcmd "set ip-address = #{ip}"
