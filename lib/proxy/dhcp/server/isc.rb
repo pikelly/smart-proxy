@@ -1,5 +1,4 @@
 require 'time'
-require 'resolv'
 module Proxy::DHCP
   class ISC < Server
 
@@ -40,9 +39,15 @@ module Proxy::DHCP
 
       # TODO: Extract this block into a generic dhcp options helper
       statements = []
-      statements << "filename = \\\"#{options[:filename]}\\\";" if options[:filename]
-      statements << bootServer(options[:nextserver]) if options[:nextserver]
-      statements << "option host-name = \\\"#{name}\\\";" if name
+      if options[:filename]
+        statements << "filename = \\\"#{options[:filename]}\\\";"
+      end
+      if options[:nextserver]
+        statements << "next-server = #{ip2hex options[:nextserver]};"
+      end
+      if name
+        statements << "option host-name = \\\"#{name}\\\";"
+      end
 
       omcmd "set statements = \"#{statements.join(" ")}\"" unless statements.empty?
       omcmd "create"
@@ -91,6 +96,7 @@ module Proxy::DHCP
 
     private
     def loadSubnets
+      super
       @config.each_line do |line|
         if line =~ /^\s*subnet\s+([\d\.]+)\s+netmask\s+([\d\.]+)/
           Proxy::DHCP::Subnet.new(self, $1, $2)
