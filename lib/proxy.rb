@@ -1,9 +1,10 @@
 module Proxy
   MODULES = %w{dns dhcp tftp puppetca puppet}
+  require "pathname"
   require "proxy/settings"
   require "rubygems"
   require "fileutils"
-  require "pathname"
+  require "net/ping"
   require "proxy/log"
   require "proxy/util"
   require "proxy/tftp"     if SETTINGS.tftp

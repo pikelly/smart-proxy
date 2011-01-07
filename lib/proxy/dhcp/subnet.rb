@@ -115,9 +115,10 @@ module Proxy::DHCP
       else
         free_ips.each do |ip|
           logger.debug "searching for free ip - pinging #{ip}"
-          # TODO: check for a more faster / portable way
-          `ping -q -c 1 #{ip} >/dev/null`
-          if $? == 0 or Ping.pingecho(ip,1)
+          Net::Ping::TCP.service_check=true
+          t = Net::Ping::TCP.new(nil,nil,1)
+          i = Net::Ping::ICMP.new(nil,nil,1)
+          if t.ping(ip) or i.ping(ip)
             logger.info "Found a pingable IP(#{ip}) address which does not have a Proxy::DHCP record"
           else
             logger.debug "Found free ip #{ip} out of a total of #{free_ips.size} free ips"
