@@ -95,7 +95,15 @@ c = RestClient::Resource.new(
   )
 
 begin
-  response = c.send(verb, json ? {:accept => :json, :content_type => :json}.merge(eval(ARGV.shift)) : {})
+  json_args = {}
+  if json
+    json_args = {:accept => :json, :content_type => :json}
+    unless ARGV.empty?
+      # then merge any optional POST parameters
+      json_args.update(eval(ARGV.shift))
+    end
+  end
+  response = c.send(verb, json_args)
   puts response.code
 
   puts response.to_str
