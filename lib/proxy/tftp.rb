@@ -10,7 +10,7 @@ module Proxy::TFTP
     # Assumes we want to use pxelinux.cfg for configuration files.
     def create mac, config
       if mac.nil? or config.nil?
-        logger.info "invalid parameters recieved"
+        logger.info "invalid parameters received"
         return false
       end
 
@@ -27,9 +27,9 @@ module Proxy::TFTP
     # Assumes we want to use pxelinux.cfg for configuration files.
     # parameter is a mac address
     def remove mac
-      file = syslinux_mac(mac)
-      if File.exists?(file)
-        FileUtils.rm_f file
+      file = Pathname.new(syslinux_mac(mac))
+      if file.exists?
+        file.unlink
         logger.debug "TFTP entry for #{mac} removed successfully"
       else
         logger.info "TFTP: Skipping a request to delete a file which doesn't exists"
@@ -43,20 +43,27 @@ module Proxy::TFTP
       filename    = src.split("/")[-1]
       destination = Pathname.new("#{SETTINGS.tftproot}/#{dst}-#{filename}")
 
-      #ensure that our image direcotry exists
-      #as the dst might contain another sub directory
-      FileUtils.mkdir_p destination.parent
+      # If the file exists then we are done
+      return true if destination.exist? and destination.size? > 0
 
-      cmd = "wget --no-check-certificate -b -c -q #{src} -O \"#{destination}\""
-      logger.debug "trying to execute #{cmd}"
-      `#{cmd}`
-      $? == 0
+      # Ensure that our image directory exists
+      # as the dst might contain another sub directory
+      destination.parent.mkpath
+
+      # This makes wget ignore the proxy environment for hosts which are not qualified or IPs
+      # Maybe this is not even right
+      match = src.match(/:\/\/([^\/]+)/)
+      proxy = (match and match[1] !~ /\./) ? "--no-proxy" : ""
+
+      cmd = "wget #{proxy} --no-check-certificate -c -nv #{src} -O \"#{destination}\" >> #{SETTINGS.log_file} 2>&1"
+      logger.debug "Executing #{cmd}"
+      raise "Access to #{src} failed" unless system "#{cmd}" and destination.size? > 0
     end
 
     private
     # returns the absolute path
     def path(p = nil)
-      p ||= SETTINGS.tftproot || File.dirname(__FILE__) + "/tftpboot"
+      p ||= SETTINGS.tftproot || ORIGIN.join("tftpboot").to_s
       # are we running in RAILS or as a standalone CGI?
       dir = defined?(RAILS_ROOT) ? RAILS_ROOT : File.dirname(__FILE__)
       return (p =~ /^\//) ? p : "#{dir}/#{p}"
