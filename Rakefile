@@ -50,3 +50,28 @@ end
 Rake::GemPackageTask.new(spec) do |pkg|
     pkg.need_tar_gz = true
 end
+require "lib/tasks/dpkgtask"
+require 'ostruct'
+control = OpenStruct.new(
+  "Package"        => "smart-proxy",
+  "Version"        => "1.0.0-1",
+  "Section"        => "web" ,
+  "Priority"       => "optional",
+  "Architecture"   => "all",
+  "Depends"        => "ruby (>= 1.8)",
+  "Pre-Depends"    => "perl",
+  "Recommends"     => "mozilla | netscape",
+  "Suggests"       => "foreman, puppetmaster, bind9, dhcp3-server, atftpd",
+  "Installed-Size" => "10240",
+  "Maintainer"     => "Paul Kelly <paul.ian.kelly@goglemail.com>",
+  "Description"    => "Smart Proxy is used by The Foreman Project
+ it allows Foreman to manage
+ remote DHCP, DNS, TFTP and Puppet servers via a RESTful API"
+)
+Rake::DpkgTask.new(control) do |t|
+  t.lib_files     = FileList["{public,views,lib,tasks,test}/**/*", "extra/*", "Rakefile", "README"]
+  t.sbin_files    = FileList["bin/**/*"].exclude(/drake/)
+  t.config_files  = FileList["config/*"].exclude(/\/Kdy|\.pem$/)
+  t.doc_files     = FileList["copyright"]
+  t.control_files = FileList["extra/build/{preinst,postinst,prerm,postrm}"]
+end

@@ -1,0 +1,9 @@
+#!/bin/sh
+
+set -e
+
+rm -rf /var/run/smart-proxy /var/log/smart-proxy 
+
+update-rc.d -f smart-proxy remove
+
+deluser --system smart-proxy 2> /dev/null
