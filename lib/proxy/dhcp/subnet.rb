@@ -19,7 +19,7 @@ module Proxy::DHCP
       @netmask   = validate_ip netmask
       @options   = {}
       @records   = {}
-      @timestamp = Time.now
+      @timestamp = Time.now if SETTINGS.dhcp_cache_enabled
       @loaded    = false
       raise Proxy::DHCP::Error, "Unable to Add Subnet" unless @server.add_subnet(self)
     end
@@ -96,10 +96,11 @@ module Proxy::DHCP
       unless has_mac?(record.mac) or has_ip?(record.ip)
         @records[record.ip] = record
         logger.debug "Added #{record} to #{to_s}"
-        return true
+        true
+      else
+        logger.warn "Record #{record} already exists in #{to_s} - can't add again"
+        false
       end
-      logger.warn "Record #{record} already exists in #{to_s} - can't add again"
-      return false
     end
 
     # returns the next unused IP Address in a subnet
