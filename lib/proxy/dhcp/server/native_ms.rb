@@ -106,7 +106,7 @@ module Proxy::DHCP
     def execute cmd, msg=nil, error_only=false
       tsecs = 5
       response = nil
-
+      
       std_in, std_out, std_err  = nil
       begin
         timeout(tsecs) do

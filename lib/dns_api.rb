@@ -1,6 +1,14 @@
+class SmartProxy
 require "proxy/dns/bind"
 def setup(opts)
   @server = Proxy::DNS::Bind.new(opts)
+  end
+
+  helpers do
+    def log_halt code, message
+      logger.error message
+      halt code, message
+    end
 end
 
 post "/dns/" do
@@ -10,9 +18,9 @@ post "/dns/" do
   begin
     setup({:fqdn => fqdn, :value => value, :type => type})
     status = @server.create
-    halt 400, "DNS create failed for #{fqdn}" unless status
+    log_halt 400, "DNS create failed for #{fqdn}" unless status
   rescue Exception => e
-    halt 400, e.to_s
+    log_halt 400, e.to_s
   end
 end
 
@@ -26,8 +34,9 @@ delete "/dns/:value" do
   end
   begin
     setup({:fqdn => fqdn, :value => value, :type => type})
-    halt 400, "DNS delete failed for #{fqdn}" unless @server.remove
+    log_halt 400, "DNS delete failed for #{fqdn}" unless @server.remove
   rescue => e
-    halt 400, e.to_s
+    log_halt 400, e.to_s
+    end
   end
 end
