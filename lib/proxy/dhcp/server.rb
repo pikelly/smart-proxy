@@ -2,6 +2,13 @@ require "proxy/dhcp/subnet"
 require "proxy/dhcp/record"
 
 module Proxy::DHCP
+  @@server = nil
+  def self.server
+    @@server
+  end
+  def self.server= value
+    @@server = value
+  end
   # represents a DHCP Server
   class Server
     attr_reader :name
@@ -27,6 +34,7 @@ module Proxy::DHCP
     end
 
     def load
+      self.clear
       @loaded = true
       loadSubnets
     end
@@ -38,7 +46,6 @@ module Proxy::DHCP
 
     # Abstracted Subnet loader method
     def loadSubnets
-      self.clear
       logger.debug "Loading subnets for #{name}"
     end
 
