@@ -1,9 +1,9 @@
-require 'test/test_helper'
+require 'test_helper'
 
 class TftpTest < Test::Unit::TestCase
 
   def setup
-    @tftp = Proxy::Tftp
+    @tftp = Proxy::TFTP
   end
 
   def test_should_have_a_logger
@@ -11,7 +11,7 @@ class TftpTest < Test::Unit::TestCase
   end
 
   def test_should_create_tftp_link
-    puts @tftp.path
+    assert_equal @tftp.send(:path), "/home/paul/git/foreman/tftpboot"
   end
 
 end

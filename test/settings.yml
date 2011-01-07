@@ -1,0 +1,47 @@
+--- 
+# This is a version of the settings file used for ms_dhcp testing
+# Edit it to contain subnets and values that exist at your site
+# Testing specific values
+:valid_subnet: 172.29.205.0
+:dhcp_server: 172.29.216.54
+# Enable TFTP management
+:tftp: true
+:tftproot: /home/paul/git/foreman/tftpboot
+
+# Enable DNS management
+:dns: true
+:dns_vendor: isc
+:dns_key: /home/paul/git/smart-proxy/config/Kdynamic-update.+157+29820.key
+
+# Enable DHCP management
+:dhcp: true
+# The vendor can be either isc or native_ms
+:dhcp_vendor: native_ms
+# The dhcp_server is only used by the native_ms implementation
+#:dhcp_server: 127.0.0.1
+# Enable caching of the results to reduce the load on the underlying DHCP server and lower the latency
+#:dhcp_cache_ttl: 300
+#:dhcp_cache_enabled: false
+# Settings for Ubuntu ISC
+#:dhcp_config: /etc/dhcp3/dhcpd.conf
+#:dhcp_leases: /var/lib/dhcp3/dhcpd.leases
+# Settings for Redhat ISC
+#:dhcp_config: etc/dhcpd.conf
+#:dhcp_leases: etc/dhcpd.leases
+
+# enable PuppetCA management
+:puppet_ca: true
+
+# enable Puppet management
+:puppet: true
+
+# Where our proxy log files are stored
+# filename or STDOUT
+# Unix setting
+#:log_file: ../log/proxy.log
+# Windows setting
+# :log_file: ..\log\proxy.log
+# valid options are 
+# Logger::WARN, Logger::DEBUG, Logger::Error, Logger::Fatal, Logger:INFO, LOGGER::UNKNOWN
+#:log_level: Logger::DEBUG
+
