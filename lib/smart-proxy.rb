@@ -80,11 +80,11 @@ if SERVICE
 else
   # Read the keys as root
   begin
-    ssl_options = {:SSLEnable       => true,
-                   :SSLVerifyClient => OpenSSL::SSL::VERIFY_NONE,
-                   :SSLPrivateKey   => OpenSSL::PKey::RSA.new(File.read(SETTINGS.ssl_private_key)),
-                   :SSLCertificate  => OpenSSL::X509::Certificate.new(File.read(SETTINGS.ssl_certificate)),
-                   :SSLCAFile       => [File.read(SETTINGS.ssl_ca_file)]
+    ssl_options = {:SSLEnable            => true,
+                   :SSLVerifyClient      => OpenSSL::SSL::VERIFY_PEER,
+                   :SSLPrivateKey        => OpenSSL::PKey::RSA.new(File.read(SETTINGS.ssl_private_key)),
+                   :SSLCertificate       => OpenSSL::X509::Certificate.new(File.read(SETTINGS.ssl_certificate)),
+                   :SSLCACertificateFile => SETTINGS.ssl_ca_file
     }
   rescue => e
     puts "Unable to access the SSL keys. Are the values correct in settings.yml and do permissions allow reading?"
