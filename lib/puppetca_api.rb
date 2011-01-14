@@ -1,11 +1,4 @@
 class SmartProxy
-  helpers do
-    def log_halt code, message
-      logger.error message
-      halt code, message
-    end
-  end
-
   put "/puppet/ca/autosign" do
     content_type :json
     certnames = params[:cert]

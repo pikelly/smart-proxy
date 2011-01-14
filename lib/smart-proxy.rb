@@ -36,6 +36,13 @@ class SmartProxy < Sinatra::Base
   set :logging, true
   set :run,     true
 
+  helpers do
+    def log_halt code, message
+      logger.error message
+      halt code, message
+    end
+  end
+
   require "tftp_api"     if SETTINGS.tftp
   require "puppet_api"   if SETTINGS.puppet
   require "puppetca_api" if SETTINGS.puppetca

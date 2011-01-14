@@ -21,10 +21,6 @@ class SmartProxy
   end
 
   helpers do
-    def log_halt code, message
-      logger.error message
-      halt code, message
-    end
     def load_subnet
       @subnet  = @server.find_subnet(params[:network])
       log_halt 404, "Subnet #{params[:network]} not found" unless @subnet

@@ -2,13 +2,6 @@ class SmartProxy
 require "proxy/dns/bind"
 def setup(opts)
   @server = Proxy::DNS::Bind.new(opts)
-  end
-
-  helpers do
-    def log_halt code, message
-      logger.error message
-      halt code, message
-    end
 end
 
 post "/dns/" do

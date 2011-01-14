@@ -1,11 +1,4 @@
 class SmartProxy
-  helpers do
-    def log_halt code, message
-      logger.error message
-      halt code, message
-    end
-  end
-
   post "/puppet/run" do
     hosts = params[:nodes]
     begin
