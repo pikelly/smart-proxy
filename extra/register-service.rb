@@ -9,7 +9,7 @@ else
   include Win32
   include Config
 
-  executable = Pathname.new(__FILE__).dirname.parent.join("bin", "smart-proxy")
+  executable = Pathname.new(__FILE__).dirname.parent.join("lib", "smart-proxy.rb")
   executable = executable.realpath
   ruby = File.join(CONFIG['bindir'], 'ruby').tr('/', '\\')
   cmd  = ruby + ' "' + executable.to_s.tr('/', '\\') +'" --service'

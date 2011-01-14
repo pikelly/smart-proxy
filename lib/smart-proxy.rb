@@ -3,7 +3,7 @@ require "rubygems"
 require "pathname"
 require 'etc'
 
-SERVICE = ARGV[0] == "--service" ? true : false
+SERVICE = ARGV[0] == "--service"
 
 ORIGIN = Pathname.new(__FILE__).dirname.parent.realpath
 
@@ -22,7 +22,6 @@ require "sinatra/base"
 require "proxy"
 require "sinatra-patch"
 require "json"
-require "haml"
 require 'openssl'
 require 'webrick/https'
 
@@ -59,6 +58,18 @@ class SmartProxy < Sinatra::Base
   require "dhcp_api"     if SETTINGS.dhcp
 end
 
+# Read the keys as root
+begin
+  ssl_options = {:SSLEnable            => true,
+                 :SSLVerifyClient      => OpenSSL::SSL::VERIFY_PEER,
+                 :SSLPrivateKey        => OpenSSL::PKey::RSA.new(File.read(SETTINGS.ssl_private_key)),
+                 :SSLCertificate       => OpenSSL::X509::Certificate.new(File.read(SETTINGS.ssl_certificate)),
+                 :SSLCACertificateFile => SETTINGS.ssl_ca_file
+  }
+rescue => e
+  puts "Unable to access the SSL keys. Are the values correct in settings.yml and do permissions allow reading?"
+end
+
 if SERVICE
   begin
     require 'win32/daemon'
@@ -71,13 +82,14 @@ if SERVICE
     puts "#{Time.now}: Service is starting"
 
     class Daemon
+      attr_writer :ssl_options
       def service_init
         puts "#{Time.now}: Service is initializing"
       end
 
       def service_main(*args)
         puts "#{Time.now}: Service is running"
-        SmartProxy.run!
+        SmartProxy.run!({}, @ssl_options)
         puts "#{Time.now}: Service is terminating"
 
      end
@@ -88,23 +100,14 @@ if SERVICE
       end
     end
 
-    Daemon.mainloop
+    daemon = Daemon.new
+    daemon.ssl_options = ssl_options
+    daemon.mainloop
   rescue Exception => err
     File.open(SERVICELOG,(File::APPEND|File::CREAT|File::WRONLY)){ |f| f.puts " ***Daemon failure #{Time.now} err=#{err} " }
     raise
   end
 else
-  # Read the keys as root
-  begin
-    ssl_options = {:SSLEnable            => true,
-                   :SSLVerifyClient      => OpenSSL::SSL::VERIFY_PEER,
-                   :SSLPrivateKey        => OpenSSL::PKey::RSA.new(File.read(SETTINGS.ssl_private_key)),
-                   :SSLCertificate       => OpenSSL::X509::Certificate.new(File.read(SETTINGS.ssl_certificate)),
-                   :SSLCACertificateFile => SETTINGS.ssl_ca_file
-    }
-  rescue => e
-    puts "Unable to access the SSL keys. Are the values correct in settings.yml and do permissions allow reading?"
-  end
   # Drop root privileges
   unless Gem.win_platform?
     if SETTINGS.group and Process::uid == 0
