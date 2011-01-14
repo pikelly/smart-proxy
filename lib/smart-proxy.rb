@@ -43,6 +43,15 @@ class SmartProxy < Sinatra::Base
     end
   end
 
+  before do
+  # If we reach here then the peer is verified and cannot be spoofed
+    if SETTINGS.trusted_hosts
+      unless SETTINGS.trusted_hosts.include? request.host
+        log_halt 403, "Untrusted client #{request.host} attempted to access #{request.path_info}. Check :trusted_hosts: in settings.yml"
+      end
+    end
+  end
+
   require "tftp_api"     if SETTINGS.tftp
   require "puppet_api"   if SETTINGS.puppet
   require "puppetca_api" if SETTINGS.puppetca
