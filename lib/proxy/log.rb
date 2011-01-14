@@ -1,3 +1,10 @@
+if SERVICE
+  SERVICELOG = ORIGIN.join("log", "service.log")
+  $stdout.reopen(SERVICELOG, "a")
+  $stdout.sync = true
+  $stderr.reopen($stdout)
+end
+
 module Proxy::Log
   @@logger = nil
   def logger

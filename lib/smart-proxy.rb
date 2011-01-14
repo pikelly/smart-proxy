@@ -7,13 +7,6 @@ SERVICE = ARGV[0] == "--service"
 
 ORIGIN = Pathname.new(__FILE__).dirname.parent.realpath
 
-if SERVICE
-  SERVICELOG = ORIGIN.join("log", "service.log")
-  $stdout.reopen(SERVICELOG, "a")
-  $stdout.sync = true
-  $stderr.reopen($stdout)
-end
-
 # If we have been installed as an application in /usr/sbin then our libraries are in /usr/lib/smart-proxy/lib
 lib = ORIGIN.to_s == "/usr" ? ORIGIN.join("lib", "smart-proxy", "lib") : ORIGIN.join("lib").to_s
 $LOAD_PATH.unshift lib
