@@ -49,6 +49,7 @@ spec = Gem::Specification.new do |s|
   s.add_dependency(%q<sinatra>, ["= 1.1.0"])
   s.add_dependency(%q<net-ping>, [">= 1.3.7"])
 
+  s.add_development_dependency(%q<rake>, [">= 0.8.7"])
   s.add_development_dependency(%q<ruby-debug-base>, [">= 0.10.4"])
   s.add_development_dependency(%q<ruby-debug-ide>, [">= 0.4.11"])
   s.description = <<EOF

@@ -53,6 +53,9 @@ Download and install the supporting gems
     gem install net-ping --platform x86-mswin32-60  --platform mswin32
     gem install rest-client --platform x86-mswin32-60
 
+    if you wish to run the tests or do packaging then you will need :-
+      gem install rake
+
 Create a logging directory if it does not exist
   md log
 
