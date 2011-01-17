@@ -46,7 +46,6 @@ Install ruby1.8.6+
 
 Download and install the supporting gems
   From a cmd prompt
-    gem install haml json --platform x86-mswin32-60 [-p http://proxy:port]
     gem install highline --platform x86-mswin32-60
     gem install rack --version 1.2.0 --platform x86-mswin32-60
     gem install sinatra --platform x86-mswin32-60
@@ -100,9 +99,10 @@ Download the smart proxy. If you wish to store the logs within this area then en
   and unpack the file
 
 Download and install the supporting gems
-    gem install haml json
+    gem install json
     gem install highline
-    gem install rack sinatra
+    gem install rack -v 1.2.0
+    gem install sinatra
     gem install win32-api win32-open3 win32-service
     gem install net-ping
     gem install rest-client

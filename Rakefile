@@ -42,7 +42,7 @@ spec = Gem::Specification.new do |s|
   s.test_files = FileList.new("{test}/**/*test.rb").to_a
   s.has_rdoc = true
   s.extra_rdoc_files = ["README"]
-  s.add_dependency(%q<haml>, [">= 3.0.24"])
+  s.add_dependency(%q<rack>, ["= 1.2.0"])
   s.add_dependency(%q<json>, [">= 1.4.6"])
   s.add_dependency(%q<highline>, [">= 1.6.1"])
   s.add_dependency(%q<rest-client>, [">= 1.6.1"])
@@ -59,12 +59,9 @@ EOF
 end
 
 if Gem.win_platform?
-  spec.add_dependency(%q<rack>,          ["= 1.2.0"])
   spec.add_dependency(%q<win32-api>,     [">= 1.4.6"])
   spec.add_dependency(%q<win32-open3>,   [">= 0.3.2"])
   spec.add_dependency(%q<win32-service>, [">= 0.3.2"])
-else
-  spec.add_dependency(%q<rack>, ["= 1.2.1"])
 end
 
 Rake::GemPackageTask.new(spec) do |pkg|
@@ -79,7 +76,6 @@ control = OpenStruct.new(
   "Priority"       => "optional",
   "Architecture"   => "all",
   "Depends"        => "ruby (>= 1.8)",
-  "Pre-Depends"    => "perl",
   "Recommends"     => "mozilla | netscape",
   "Suggests"       => "foreman, puppetmaster, bind9, dhcp3-server, atftpd",
   "Installed-Size" => "10240",
