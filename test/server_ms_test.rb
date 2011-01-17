@@ -20,7 +20,6 @@ class DHCPServerMicrosoftTest < Test::Unit::TestCase
 
     def test_should_load_subnet_records
     find_subnet
-    @subnet.load
     assert @subnet.records.size > 0
   end
 
@@ -42,7 +41,6 @@ class DHCPServerMicrosoftTest < Test::Unit::TestCase
 
   def test_records_should_have_options
     find_subnet
-    @subnet.load
     record = @subnet.records.first
     @server.loadRecordOptions record
     assert record.options.size > 0
@@ -50,7 +48,6 @@ class DHCPServerMicrosoftTest < Test::Unit::TestCase
 
   def test_records_should_have_options_and_values
     find_subnet
-    @subnet.load
     record = @subnet.records.first
     @server.loadRecordOptions record
     error = false
