@@ -13,7 +13,11 @@ Rake::TestTask.new(:test) do |t|
   t.libs << 'lib/proxy'
   t.libs << 'test'
   files = FileList['test/**/*_test.rb']
-  files.delete_if{|f| f =~ /_ms_/} unless PLATFORM =~ /mingw/
+  if PLATFORM =~ /mingw/
+    files.delete_if{|f| f=~ /puppetca_test/}
+  else
+    files.delete_if{|f| f =~ /_ms_/}
+  end
   t.test_files  = files
   t.verbose = true
 end
