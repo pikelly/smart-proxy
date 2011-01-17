@@ -6,8 +6,10 @@ class ProxyTest < Test::Unit::TestCase
     assert_respond_to Proxy::Puppetca, :logger
   end
 
-  def test_which_should_return_a_binary_path
-    assert Proxy::Puppetca.which("ls") == "/bin/ls"
+  unless PLATFORM =~ /mingw/
+    def test_which_should_return_a_binary_path
+      assert Proxy::Puppetca.which("ls") == "/bin/ls"
+    end
   end
 
   def test_should_clean_host
