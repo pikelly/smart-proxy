@@ -50,12 +50,7 @@ module Proxy::TFTP
       # as the dst might contain another sub directory
       destination.parent.mkpath
 
-      # This makes wget ignore the proxy environment for hosts which are not qualified or IPs
-      # Maybe this is not even right
-      match = src.match(/:\/\/([^\/]+)/)
-      proxy = (match and match[1] !~ /\./) ? "--no-proxy" : ""
-
-      cmd = "wget #{proxy} --no-check-certificate -c -nv #{src} -O \"#{destination}\" >> #{SETTINGS.log_file} 2>&1"
+      cmd = "wget --no-check-certificate -c -nv #{src} -O \"#{destination}\" >> #{SETTINGS.log_file} 2>&1"
       logger.debug "Executing #{cmd}"
       raise "Access to #{src} failed" unless system "#{cmd}" and destination.size? > 0
     end
