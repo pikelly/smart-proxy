@@ -3,6 +3,7 @@ module Proxy
   require "proxy/settings"
   require "fileutils"
   require "pathname"
+  require "rubygems"
   require "proxy/log"
   require "proxy/util"
   require "proxy/tftp"     if SETTINGS.tftp
