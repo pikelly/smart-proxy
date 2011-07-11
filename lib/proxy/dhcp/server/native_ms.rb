@@ -26,26 +26,47 @@ module Proxy::DHCP
 
     def addRecord options={}
       super(options)
-      ip     = options[:ip]
-      mac    = options[:mac]
-      name   = options[:name]
-      subnet = find_subnet(IPAddr.new(ip))
+      ip     = options.delete "ip"
+      mac    = options.delete "mac"
+      name   = options.delete "name"
+      subnet = find_subnet options.delete "network"
 
       msg = "Added DHCP reservation for #{name} => #{ip} - #{mac}"
       cmd = "scope #{subnet.network} add reservedip #{ip} #{mac.gsub(/:/,"")} #{name}"
       execute(cmd, msg)
 
-      return if options[:nextserver].nil?  # This reservation is just for an IP and MAC
+      return if options.empty?  # This reservation is just for an IP and MAC
 
       # TODO: Refactor these execs into a popen
-      cmd = "scope #{subnet.network} set reservedoptionvalue #{ip} #{Optcode[:filename]}   String #{options[:filename]}"
-      execute(cmd, msg, true)
-
-      cmd = "scope #{subnet.network} set reservedoptionvalue #{ip} #{Optcode[:nextserver]} String #{options[:nextserver]}"
-      execute(cmd, msg, true)
-
-      cmd = "scope #{subnet.network} set reservedoptionvalue #{ip} #{Optcode[:hostname]}   String #{options[:hostname]}"
-      execute(cmd, msg, true)
+      gini_vendor = nil
+      for key, value in options
+        if match = key.match(/^<([^>]+)>(.*)/)
+          vendor, attr = match[1,2]
+          vendor = gini_vendor if gini_vendor
+          begin
+            execute "scope #{subnet.network} set reservedoptionvalue #{ip} #{Optcode[attr][:code]} #{Optcode[attr][:kind]} vendor=#{vendor} #{value}", msg, true
+          rescue Proxy::DHCP::Error => e
+            if e.message =~ /Vendor class not found/
+              # Try a heuristic to find a Gini compatible vendor class
+              @classes = @classes || loadVendorClasses
+              gini_vendor = vendor.gsub(/^sun-/i, "")
+              if gini_vendor != vendor and !(gini_vendor = @classes.grep(/#{gini_vendor}/i)).empty?
+                gini_vendor = gini_vendor[0]
+                execute "scope #{subnet.network} set reservedoptionvalue #{ip} #{Optcode[attr][:code]} #{Optcode[attr][:kind]} vendor=#{gini_vendor} #{value}", msg, true
+              else
+                # OK. There does not appear to be a class with the abbreviated Gini name so lets try
+                # and add the class and hope that it does not conflict with the same entry under another name
+                installVendorClass vendor
+                execute "scope #{subnet.network} set reservedoptionvalue #{ip} #{Optcode[attr][:code]} #{Optcode[attr][:kind]} vendor=#{vendor} #{value}", msg, true
+              end
+            else
+              raise
+            end
+          end
+        else
+          execute "scope #{subnet.network} set reservedoptionvalue #{ip} #{Optcode[key][:code]} #{Optcode[key][:kind]} #{value}", msg, true
+        end
+      end
 
       record = Proxy::DHCP::Reservation.new subnet, ip, mac, options
     end
@@ -89,8 +110,27 @@ module Proxy::DHCP
       record.options = parse_options(execute(cmd, msg)).merge(:ip => record.ip, :mac => record.mac)
     end
 
+    def installVendorClass vendor_class
+      cmd = "show class"
+      msg = "Queried vendor classes"
+      classes = parse_classes(execute(cmd, msg))
+      return if classes.include? vendor_class
+      cls = "SUNW.#{vendor_class}"
+
+      execute("add class #{vendor_class} \"Vendor class for #{vendor_class}\" \"#{cls}\" 1", "Added class vendor_class")
+      for option in ["root_server_ip", "root_server_hostname", "root_path_name", "install_server_ip", "install_server_name",
+                     "install_path", "sysid_server_path", "jumpstart_server_path"]
+        cmd = "add optiondef #{Optcode[option][:code]} #{option} #{Optcode[option][:kind]} 0 vendor=#{vendor_class}"
+      end
+    end
 
     private
+    def loadVendorClasses
+      cmd = "show class"
+      msg = "Queried vendor classes"
+      parse_classes(execute(cmd, msg))
+    end
+
     def loadSubnets
       super
       cmd = "show scope"
@@ -130,13 +170,18 @@ module Proxy::DHCP
 
     def report msg, response, error_only
       if response.grep(/completed successfully/).empty?
-        logger.error "Netsh failed:\n" + response.join("\n")
+        if response.grep /class name being used is unknown/
+          logger.info "Vendor class not found"
+        else
+          logger.error "Netsh failed:\n" + response.join("\n")
+        end
         msg.sub! /Removed/,    "remove"
         msg.sub! /Added/,      "add"
         msg.sub! /Enumerated/, "enumerate"
         msg.sub! /Queried/,    "query"
         match = ""
         msg  = "Failed to #{msg}"
+        msg += "Vendor class not found" if response.grep /class name being used is unknown/
         msg += ": No entry found" if response.grep(/not a reserved client/).size > 0
         msg += ": #{match}" if (match = response.grep(/used by another client/)).size > 0
         raise Proxy::DHCP::Error.new(msg)
@@ -152,19 +197,39 @@ module Proxy::DHCP
 
     def parse_options response
       optionId = nil
-      options = {}
+      options  = {}
+      vendor   = ""
       response.each do |line|
         line.chomp!
         break if line.match(/^Command completed/)
 
         case line
-        when /OptionId : (\d+)/
-          optionId = $1
-        when /Option Element Value = (\S+)/
-          options[optionId] = $1
+          when /For vendor class \[([^\]]+)\]:/
+            vendor = "<#{$1}>"
+          when /OptionId : (\d+)/
+            optionId = "#{vendor}#{$1}"
+          when /Option Element Value = (\S+)/
+            options[optionId] = $1
         end
       end
       return options
+    end
+
+    def parse_classes response
+      klass   = nil
+      classes = []
+      response.each do |line|
+        line.chomp!
+        break if line.match(/^Command completed/)
+
+        case line
+          when /Class \[([^\]]+)\]:/
+            klass = $1
+          when /Isvendor= TRUE/
+            classes << klass
+        end
+      end
+      return classes
     end
   end
 end
